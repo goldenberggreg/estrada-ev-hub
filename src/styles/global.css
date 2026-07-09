@@ -1,0 +1,311 @@
+/* ── Estrada EV Hub — global stylesheet ───────────────────────────────────────
+   Tropical modernism: teal-and-amber, geometric grids, warm surfaces.
+   Token @theme drives Tailwind v4; button family + signature charge-bar below. */
+
+@import "tailwindcss";
+
+@theme {
+  /* ── Surfaces (Wix editorial roles: paper = page bg, paper-warm = card) ── */
+  --color-paper: #F0F7F5;       /* soft mint page background */
+  --color-paper-warm: #FFFFFF;  /* card / surface */
+  --color-ink: #0D1B18;         /* primary text + dark fills */
+  --color-ink-soft: #13241F;
+  --color-mute: #3D5A52;        /* muted text */
+  --color-rule: #C2D9D3;        /* borders / dividers */
+  --color-cream: #E4F0EC;
+  --color-error: #C0392B;
+
+  /* ── Brand ── */
+  --color-primary: #00695C;     /* teal — dominant brand / primary UI */
+  --color-primary-deep: #004D40;
+  --color-accent: #00695C;      /* alias so pre-built Wix component CSS emphasises teal */
+  --color-amber: #FFAB40;       /* signature accent — kickers, primary CTA, charge bar */
+  --color-amber-deep: #F57C00;
+
+  /* ── Brief aliases ── */
+  --color-background: #F0F7F5;
+  --color-surface: #FFFFFF;
+  --color-text: #0D1B18;
+  --color-text-muted: #3D5A52;
+  --color-border: #C2D9D3;
+  --color-dark: #0D1B18;
+  --color-on-dark: #F0F7F5;
+
+  --font-display: 'Space Grotesk', ui-sans-serif, system-ui, sans-serif;
+  --font-body: 'Outfit', ui-sans-serif, system-ui, sans-serif;
+
+  --radius-sm: 8px;
+  --radius-md: 16px;
+  --radius-lg: 24px;
+
+  --container-prose: 68ch;
+  --container-md: 48rem;
+  --container-3xl: 56rem;
+  --container-6xl: 80rem;
+}
+
+/* Reading-width helper for prose pages. */
+@utility container-reading {
+  max-width: var(--container-prose);
+  margin-inline: auto;
+}
+
+/* Shared button primitive (@utility so variants can @apply it in Tailwind v4). */
+@utility btn {
+  @apply inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-full font-medium;
+  min-height: 44px;               /* a11y tap target */
+  font-family: var(--font-body);
+  transition: background-color 200ms ease, color 200ms ease, border-color 200ms ease, transform 120ms ease;
+}
+.btn-cta:active, .btn-primary:active, .btn-secondary:active, .btn-outline-light:active { transform: translateY(1px); }
+
+@layer base {
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: var(--color-paper);
+    color: var(--color-ink);
+    font-family: var(--font-body);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+  h1, h2, h3, h4, h5, h6 { font-family: var(--font-display); line-height: 1.12; margin: 0; letter-spacing: -0.01em; }
+  p { margin: 0; }
+  a { color: inherit; text-decoration: none; }
+  button { font: inherit; cursor: pointer; }
+  input, textarea, select { font: inherit; }
+  img { display: block; max-width: 100%; height: auto; }
+  ul, ol { margin: 0; padding: 0; list-style: none; }
+  :focus-visible { outline: 3px solid var(--color-amber); outline-offset: 2px; border-radius: 2px; }
+}
+
+/* ── Button family ─────────────────────────────────────────────────────────── */
+/* Primary conversion CTA — the amber "Book a test drive" button. */
+.btn-cta {
+  @apply btn;
+  background: var(--color-amber);
+  color: var(--color-ink);
+  font-weight: 600;
+  box-shadow: 0 6px 20px -8px color-mix(in srgb, var(--color-amber) 90%, black);
+}
+.btn-cta:hover:not(:disabled) { background: var(--color-amber-deep); color: #fff; }
+.btn-cta:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* Teal primary — brand actions (Join, Get directions, Send). */
+.btn-primary {
+  @apply btn;
+  background: var(--color-primary);
+  color: #fff;
+}
+.btn-primary:hover:not(:disabled) { background: var(--color-primary-deep); }
+.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* Ghost / secondary — "Find a station". */
+.btn-secondary {
+  @apply btn;
+  background: transparent;
+  color: var(--color-ink);
+  border: 1.5px solid var(--color-rule);
+}
+.btn-secondary:hover:not(:disabled) { border-color: var(--color-primary); color: var(--color-primary); }
+.btn-secondary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* Ghost-on-dark — used over the dark hero/footer bands. */
+.btn-outline-light {
+  @apply btn;
+  background: transparent;
+  color: var(--color-on-dark);
+  border: 1.5px solid color-mix(in srgb, var(--color-on-dark) 45%, transparent);
+}
+.btn-outline-light:hover:not(:disabled) { border-color: var(--color-amber); color: var(--color-amber); }
+
+.btn-ghost {
+  @apply btn;
+  background: transparent;
+  color: var(--color-primary);
+  padding-inline: 0;
+}
+.btn-ghost:hover:not(:disabled) { color: var(--color-primary-deep); }
+
+/* ── Layout helpers ──────────────────────────────────────────────────────────── */
+.wrap { max-width: var(--container-6xl); margin-inline: auto; padding-inline: 1.25rem; }
+.section { padding-block: clamp(3.5rem, 7vw, 6rem); }
+.kicker {
+  font-family: var(--font-body);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.8125rem;
+  color: var(--color-amber-deep);
+}
+.card {
+  background: var(--color-paper-warm);
+  border: 1px solid var(--color-rule);
+  border-radius: var(--radius-md);
+  overflow: clip;
+}
+.eyebrow-line { width: 2.5rem; height: 3px; border-radius: 2px; background: var(--color-amber); }
+
+/* ── Signature device: amber charge-level bar ──────────────────────────────────
+   Fills left→right as the user scrolls the page (battery 0%→100%). Uses CSS
+   scroll-timeline where supported; falls back to a static 40% fill otherwise. */
+.charge-track {
+  position: relative;
+  height: 4px;
+  width: 100%;
+  background: var(--color-rule);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.charge-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 40%;                       /* fallback */
+  background: linear-gradient(90deg, var(--color-primary), var(--color-amber));
+  border-radius: 999px;
+}
+@supports (animation-timeline: scroll()) {
+  .charge-fill {
+    width: 100%;
+    transform-origin: left;
+    transform: scaleX(0);
+    animation: charge-sweep linear both;
+    animation-timeline: scroll(root block);
+  }
+}
+@keyframes charge-sweep { to { transform: scaleX(1); } }
+
+/* Per-card charge indicator: fills when the card scrolls into the viewport. */
+.card-charge { height: 4px; background: var(--color-rule); border-radius: 999px; overflow: hidden; }
+.card-charge > i {
+  display: block; height: 100%; width: 100%;
+  background: linear-gradient(90deg, var(--color-primary), var(--color-amber));
+  transform-origin: left; transform: scaleX(0);
+  transition: transform 900ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.reveal.is-visible .card-charge > i { transform: scaleX(1); }
+
+/* ── Scroll reveal (staggered fade-up on intersection) ────────────────────────
+   Hidden state is gated behind html.anim-ready (set inline before paint only
+   when JS runs), so content is fully visible with JS disabled or failed. */
+.reveal { transition: opacity 600ms ease, transform 600ms ease; }
+html.anim-ready .reveal { opacity: 0; transform: translateY(20px); }
+html.anim-ready .reveal.is-visible { opacity: 1; transform: none; }
+
+/* ── Hero load choreography ───────────────────────────────────────────────────
+   Text is VISIBLE by default (LCP + no-JS safe); .hero-ready only adds the
+   entrance animation as an enhancement. */
+.hero-ready .hero-kicker  { animation: hero-fade 500ms ease 200ms both; }
+.hero-ready .hero-title   { animation: hero-rise 600ms ease 400ms both; }
+.hero-ready .hero-sub     { animation: hero-rise 600ms ease 600ms both; }
+.hero-ready .hero-cta     { animation: hero-pop  500ms ease 800ms both; }
+.hero-copy { text-shadow: 0 2px 20px rgba(13, 27, 24, 0.45); }
+@keyframes hero-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes hero-rise { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: none; } }
+@keyframes hero-pop  { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+
+/* ── Accordion (FAQ) ────────────────────────────────────────────────────────── */
+.accordion details {
+  border-bottom: 1px solid var(--color-rule);
+}
+.accordion summary {
+  display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+  padding: 1.25rem 0; font-family: var(--font-display); font-weight: 700; font-size: 1.0625rem;
+  list-style: none; cursor: pointer;
+}
+.accordion summary::-webkit-details-marker { display: none; }
+.accordion summary::after {
+  content: "+"; font-family: var(--font-body); font-weight: 400; font-size: 1.5rem;
+  color: var(--color-primary); transition: transform 200ms ease;
+}
+.accordion details[open] summary::after { transform: rotate(45deg); }
+.accordion .acc-body { padding-bottom: 1.25rem; color: var(--color-mute); max-width: 60ch; }
+
+/* ── Mobile sticky booking bar ──────────────────────────────────────────────── */
+.mobile-book-bar {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 60;
+  padding: 0.75rem 1rem calc(0.75rem + env(safe-area-inset-bottom));
+  background: color-mix(in srgb, var(--color-ink) 92%, transparent);
+  backdrop-filter: blur(8px);
+  border-top: 1px solid color-mix(in srgb, var(--color-on-dark) 15%, transparent);
+}
+@media (min-width: 768px) { .mobile-book-bar { display: none; } }
+body { padding-bottom: 0; }
+@media (max-width: 767px) { body { padding-bottom: 76px; } }
+
+/* ── Cross-cutting decorative patterns (Wix pack contract — kept, inert) ──────── */
+[data-decorative-slot] { position: relative; overflow: hidden; }
+[data-decorative-slot] > img { width: 100%; height: 100%; object-fit: cover; }
+.editorial-rule { border: 0; height: 1px; background: var(--color-accent); opacity: 0.6; margin-block: 1.5rem; }
+
+/* ── Universal site chrome ────────────────────────────────────────────────────── */
+.site-nav {
+  position: sticky; top: 0; z-index: 50;
+  background: color-mix(in srgb, var(--color-paper) 90%, transparent);
+  backdrop-filter: saturate(1.1) blur(8px);
+  border-bottom: 1px solid var(--color-rule);
+}
+.site-footer { background: var(--color-ink); color: var(--color-on-dark); }
+
+/* ── View Transitions wiring (paired with Layout.astro <script>) ──────────────── */
+::view-transition-old(root), ::view-transition-new(root) { animation: none; mix-blend-mode: normal; }
+.nav-progress {
+  position: fixed; top: 0; left: 0; right: 0; height: 3px;
+  background: var(--color-amber); transform: scaleX(0); transform-origin: left;
+  z-index: 1000; pointer-events: none; opacity: 0;
+}
+.nav-progress[data-state="loading"] { opacity: 1; transform: scaleX(0.85); transition: transform 1.6s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 120ms ease; }
+.nav-progress[data-state="done"] { opacity: 0; transform: scaleX(1); transition: transform 200ms ease, opacity 240ms ease 60ms; }
+
+/* ── Form fields ──────────────────────────────────────────────────────────────── */
+.field { display: flex; flex-direction: column; gap: 0.4rem; }
+.field > span { font-size: 0.8125rem; font-weight: 600; color: var(--color-ink); }
+.field input, .field select, .field textarea {
+  width: 100%; padding: 0.7rem 0.9rem; min-height: 44px;
+  background: var(--color-paper); border: 1.5px solid var(--color-rule);
+  border-radius: var(--radius-sm); color: var(--color-ink);
+  transition: border-color 160ms ease, box-shadow 160ms ease;
+}
+.field textarea { min-height: 120px; resize: vertical; }
+.field input:focus, .field select:focus, .field textarea:focus {
+  outline: none; border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 18%, transparent);
+}
+.field input[type="file"] { padding: 0.5rem; background: var(--color-paper-warm); }
+.field input::placeholder, .field textarea::placeholder { color: color-mix(in srgb, var(--color-mute) 70%, transparent); }
+
+/* ── Range inputs + calculator bars ──────────────────────────────────────────── */
+.field input[type="range"] { min-height: auto; padding: 0; accent-color: var(--color-primary); height: 6px; }
+.calc-bar { height: 12px; border-radius: 999px; background: var(--color-cream); overflow: hidden; }
+.calc-bar > span { display: block; height: 100%; border-radius: 999px; background: var(--color-primary); transition: width 300ms ease; }
+
+/* ── Charging dashboard ──────────────────────────────────────────────────────── */
+.spark { display: flex; align-items: flex-end; gap: 6px; height: 90px; }
+.spark > div { flex: 1; background: linear-gradient(180deg, var(--color-primary), var(--color-amber)); border-radius: 4px 4px 0 0; min-height: 4px; }
+
+/* ── Station map facade ───────────────────────────────────────────────────────── */
+.map-facade, .map-embed-wrap {
+  position: relative; width: 100%; aspect-ratio: 16 / 10;
+  border-radius: var(--radius-md); overflow: hidden; border: 1px solid var(--color-rule);
+  background: var(--color-cream);
+}
+@media (min-width: 768px) { .map-facade, .map-embed-wrap { aspect-ratio: 21 / 9; } }
+.map-bg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.map-pin { position: absolute; transform: translate(-50%, -100%); display: inline-flex; flex-direction: column; align-items: center; gap: 2px; }
+.pin-dot { width: 14px; height: 14px; border-radius: 999px; border: 2px solid #fff; box-shadow: 0 2px 6px rgba(0,0,0,0.25); }
+.pin-free { background: #22C55E; }
+.pin-busy { background: #F87171; }
+.pin-label { font-size: 0.6rem; font-weight: 600; color: var(--color-ink); background: color-mix(in srgb, var(--color-paper-warm) 85%, transparent); padding: 0 4px; border-radius: 4px; white-space: nowrap; }
+.map-pin:hover .pin-dot, .map-pin:focus-visible .pin-dot { transform: scale(1.25); }
+.map-load-btn { position: absolute; left: 50%; bottom: 1rem; transform: translateX(-50%); }
+
+/* ── Reduced motion: everything at final state, charge bars filled ────────────── */
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after { animation-duration: 0.001ms !important; animation-delay: 0ms !important; transition-duration: 0.001ms !important; }
+  .reveal { opacity: 1; transform: none; }
+  .hero-anim { opacity: 1; }
+  .charge-fill { width: 100% !important; transform: none !important; }
+  .card-charge > i { transform: scaleX(1) !important; }
+}

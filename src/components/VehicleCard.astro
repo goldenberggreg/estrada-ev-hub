@@ -1,0 +1,34 @@
+---
+import { type Vehicle } from "../lib/content";
+interface Props { vehicle: Vehicle; revealDelay?: number; }
+const { vehicle, revealDelay = 0 } = Astro.props;
+---
+<article class="card reveal p-6 flex flex-col gap-4" data-reveal-delay={revealDelay}>
+  <div class="flex items-start justify-between gap-3">
+    <div>
+      <p class="kicker mb-1">{vehicle.type}</p>
+      <h3 class="font-display font-bold text-2xl leading-tight">{vehicle.model}</h3>
+    </div>
+    <span class="ev-badge" aria-hidden="true">⚡</span>
+  </div>
+  <div class="flex gap-6 text-sm">
+    <div>
+      <p class="font-display font-bold text-xl text-primary">{vehicle.rangeKm}<span class="text-sm font-body font-normal text-mute"> km</span></p>
+      <p class="text-xs text-mute uppercase tracking-wide">Range</p>
+    </div>
+    <div>
+      <p class="font-display font-bold text-xl text-primary">{vehicle.seats}</p>
+      <p class="text-xs text-mute uppercase tracking-wide">Seats</p>
+    </div>
+  </div>
+  <p class="text-sm text-mute leading-relaxed grow">{vehicle.description}</p>
+  <a href={`/test-drives?vehicle=${vehicle.slug}`} class="btn-primary !py-2.5 text-sm self-start">Book this model</a>
+</article>
+
+<style>
+  .ev-badge {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 2.5rem; height: 2.5rem; border-radius: 999px; flex: none;
+    background: color-mix(in srgb, var(--color-amber) 22%, transparent); font-size: 1.1rem;
+  }
+</style>

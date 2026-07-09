@@ -1,0 +1,153 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import JsonLd from "../../components/JsonLd.astro";
+import MuralArt from "../../components/MuralArt.astro";
+import CommentForm from "../../components/react/CommentForm.tsx";
+import { posts, postBySlug, fmtDate } from "../../data/journal";
+import { getComments } from "../../lib/content";
+import { getCurrentMember } from "../../lib/wixSession";
+
+const { slug } = Astro.params;
+const post = postBySlug(slug!);
+if (!post) {
+  return Astro.redirect("/blog");
+}
+
+const [comments, member] = await Promise.all([getComments(post.slug), getCurrentMember()]);
+const fmtCommentDate = (d?: string | Date) => {
+  if (!d) return "";
+  try { return new Date(d).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }); }
+  catch { return ""; }
+};
+
+const keepReading = posts.filter((p) => p.slug !== post.slug).slice(0, 2);
+const wordCount = post.body.join(" ").split(/\s+/).filter(Boolean).length;
+
+const articleSchema = {
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  headline: post.title,
+  description: post.excerpt,
+  datePublished: post.date,
+  author: { "@type": "Person", name: post.author },
+  articleSection: post.category,
+  wordCount,
+  mainEntityOfPage: {
+    "@type": "WebPage",
+    "@id": `https://estradaevhub.com.br/blog/${post.slug}`,
+  },
+};
+---
+
+<Layout title={post.title} description={post.excerpt}>
+  <JsonLd slot="head" data={articleSchema} />
+
+  <!-- charge bar: page-scroll signature device -->
+  <div class="charge-track"><div class="charge-fill"></div></div>
+
+  <article class="section">
+    <div class="wrap">
+      <div class="max-w-[48rem] mx-auto">
+        <a href="/blog" class="btn-ghost inline-flex mb-6">← Back to the Journal</a>
+
+        <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-mute">
+          <span class="inline-flex items-center rounded-full bg-primary text-white px-3 py-1 text-xs font-semibold">
+            {post.category}
+          </span>
+          <time datetime={post.date}>{fmtDate(post.date)}</time>
+          <span aria-hidden="true">·</span>
+          <span>{post.author}</span>
+          <span aria-hidden="true">·</span>
+          <span>{post.readMins} min read</span>
+        </div>
+
+        <h1 class="font-display font-bold text-3xl md:text-5xl leading-[1.08] mt-4">
+          {post.title}
+        </h1>
+      </div>
+
+      <div class="max-w-[64rem] mx-auto mt-8 rounded-lg overflow-hidden">
+        <MuralArt seed={post.slug} label={`Mural cover for: ${post.title}`} ratio="21 / 9" />
+      </div>
+
+      <div class="max-w-[48rem] mx-auto mt-10">
+        {post.body.map((para) => (
+          <p class="text-lg leading-relaxed text-ink/90 mb-5">{para}</p>
+        ))}
+
+        <!-- Comments (members only can post) -->
+        <section class="mt-12" id="comments" aria-label="Comments">
+          <h2 class="font-display font-bold text-2xl mb-5">
+            Comments (<span id="comment-count">{comments.length}</span>)
+          </h2>
+
+          {member ? (
+            <div class="card p-5 mb-6">
+              <CommentForm client:idle postSlug={post.slug} authorName={member.firstName ?? member.email} />
+            </div>
+          ) : (
+            <div class="card p-5 mb-6 flex items-center justify-between gap-3 flex-wrap">
+              <span class="text-mute text-sm">Log in to join the conversation.</span>
+              <a href="/membership#join" class="btn-primary !py-2 !px-4 text-sm">Log in to comment</a>
+            </div>
+          )}
+
+          <ul id="comment-list">
+            {comments.length === 0 && (
+              <li id="comment-empty" class="text-mute text-sm py-4">No comments yet — be the first to share your experience.</li>
+            )}
+            {comments.map((c) => (
+              <li class="border-t border-rule py-4">
+                <div class="flex items-center gap-2 mb-1">
+                  <span class="w-7 h-7 rounded-full bg-primary text-white text-xs font-display font-bold inline-flex items-center justify-center" aria-hidden="true">
+                    {(c.authorName || "?").charAt(0).toUpperCase()}
+                  </span>
+                  <span class="font-medium text-sm">{c.authorName}</span>
+                  {c._createdDate && <span class="text-xs text-mute">{fmtCommentDate(c._createdDate)}</span>}
+                </div>
+                <p class="text-mute text-sm whitespace-pre-line">{c.body}</p>
+              </li>
+            ))}
+          </ul>
+        </section>
+      </div>
+    </div>
+  </article>
+
+  <!-- KEEP READING -->
+  <section class="section bg-paper-warm border-y border-rule">
+    <div class="wrap">
+      <div class="max-w-[48rem] mx-auto">
+        <p class="kicker mb-6">Keep reading</p>
+        <div class="grid gap-6 sm:grid-cols-2">
+          {keepReading.map((p, i) => (
+            <a
+              href={`/blog/${p.slug}`}
+              class="card reveal overflow-hidden group"
+              data-reveal-delay={i * 100}
+            >
+              <div class="relative">
+                <MuralArt seed={p.slug} label={`Mural cover for: ${p.title}`} ratio="16 / 9" />
+                <span class="absolute top-3 left-3 bg-paper text-primary-deep text-xs font-semibold px-2.5 py-1 rounded-full">
+                  {p.category}
+                </span>
+              </div>
+              <div class="p-5">
+                <p class="text-xs text-mute">
+                  <time datetime={p.date}>{fmtDate(p.date)}</time> · {p.readMins} min read
+                </p>
+                <h3 class="font-display font-bold text-lg mt-1 leading-tight group-hover:text-primary transition-colors">
+                  {p.title}
+                </h3>
+              </div>
+            </a>
+          ))}
+        </div>
+
+        <div class="mt-10">
+          <a href="/test-drives" class="btn-cta">Book a test drive</a>
+        </div>
+      </div>
+    </div>
+  </section>
+</Layout>

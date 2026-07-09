@@ -1,22 +1,131 @@
+---
+import "../styles/global.css";
+import { ClientRouter } from "astro:transitions";
+import Navigation from "../components/Navigation.astro";
+import Footer from "../components/Footer.astro";
+import MobileStickyBookingBar from "../components/react/MobileStickyBookingBar.tsx";
+
+interface Props {
+  title?: string;
+  description?: string;
+  image?: string;
+  noindex?: boolean;
+  hasSeoTags?: boolean;
+}
+
+const {
+  title,
+  description = "Fast EV charging with co-working lounges, local coffee, and neighborhood murals across São Paulo. Free Saturday test drives from our Vila Madalena flagship.",
+  image = "https://static.wixstatic.com/media/estrada-hero-og.jpg",
+  noindex = false,
+  hasSeoTags = false,
+} = Astro.props;
+
+const fullTitle = title ? `${title} · Estrada EV Hub` : "Estrada EV Hub · EV charging São Paulo";
+const canonical = Astro.url.href;
+const fontHref =
+  "https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Outfit:wght@400;500;600;700&display=swap";
+---
+
 <!doctype html>
-<html lang="en">
-	<head>
-		<meta charset="UTF-8" />
-		<meta name="viewport" content="width=device-width" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Wix Astro Basics</title>
-	</head>
-	<body>
-		<slot />
-	</body>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E⚡%3C/text%3E%3C/svg%3E" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preload" as="style" href={fontHref} />
+    <link rel="stylesheet" href={fontHref} />
+
+    {!hasSeoTags && (
+      <>
+        <title>{fullTitle}</title>
+        <meta name="description" content={description} />
+        <link rel="canonical" href={canonical} />
+        {noindex && <meta name="robots" content="noindex,nofollow" />}
+        <meta property="og:type" content="website" />
+        <meta property="og:site_name" content="Estrada EV Hub" />
+        <meta property="og:title" content={fullTitle} />
+        <meta property="og:description" content={description} />
+        <meta property="og:url" content={canonical} />
+        <meta property="og:image" content={image} />
+        <meta property="og:locale" content="pt_BR" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:site" content="@estradaev" />
+        <meta name="twitter:title" content={fullTitle} />
+        <meta name="twitter:description" content={description} />
+        <meta name="twitter:image" content={image} />
+        <meta name="theme-color" content="#00695C" />
+      </>
+    )}
+    <slot name="head" />
+    {/* Set the JS-only flag before paint so .reveal hides only when JS can reveal it. */}
+    <script is:inline>
+      (function () {
+        var m = window.matchMedia("(prefers-reduced-motion: reduce)");
+        if (!m.matches) document.documentElement.classList.add("anim-ready");
+      })();
+    </script>
+    <ClientRouter />
+  </head>
+  <body>
+    <div class="nav-progress" data-nav-progress aria-hidden="true"></div>
+    <a href="#main" class="skip-link">Skip to content</a>
+    <Navigation />
+    <main id="main"><slot /></main>
+    <Footer />
+    <MobileStickyBookingBar client:load />
+
+    <script>
+      // Nav progress bar + hero choreography + scroll reveals. Re-runs across
+      // View Transitions navigations (astro:page-load).
+      const progress = document.querySelector<HTMLElement>("[data-nav-progress]");
+      const startProgress = () => { if (progress) progress.dataset.state = "loading"; };
+      const endProgress = () => {
+        if (!progress) return;
+        progress.dataset.state = "done";
+        window.setTimeout(() => { if (progress.dataset.state === "done") delete progress.dataset.state; }, 320);
+      };
+      document.addEventListener("astro:before-preparation", startProgress);
+      document.addEventListener("astro:after-swap", endProgress);
+
+      const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+      function initReveals() {
+        const els = document.querySelectorAll<HTMLElement>(".reveal:not(.is-visible)");
+        if (reduce) { els.forEach((el) => el.classList.add("is-visible")); return; }
+        const io = new IntersectionObserver((entries, obs) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              const el = entry.target as HTMLElement;
+              const delay = Number(el.dataset.revealDelay ?? 0);
+              window.setTimeout(() => el.classList.add("is-visible"), delay);
+              obs.unobserve(el);
+            }
+          });
+        }, { rootMargin: "0px 0px -8% 0px", threshold: 0.12 });
+        els.forEach((el) => io.observe(el));
+      }
+
+      function initHero() {
+        requestAnimationFrame(() => document.documentElement.classList.add("hero-ready"));
+      }
+
+      function boot() { initHero(); initReveals(); }
+      document.addEventListener("astro:page-load", boot);
+      if (document.readyState !== "loading") boot();
+      else document.addEventListener("DOMContentLoaded", boot);
+    </script>
+  </body>
 </html>
 
-<style>
-	html,
-	body {
-		margin: 0;
-		width: 100%;
-		height: 100%;
-	}
+<style is:global>
+  .skip-link {
+    position: absolute; left: -9999px; top: 0; z-index: 1001;
+  }
+  .skip-link:focus {
+    left: 0.5rem; top: 0.5rem; background: var(--color-ink); color: var(--color-on-dark);
+    padding: 0.5rem 1rem; border-radius: 8px;
+  }
 </style>

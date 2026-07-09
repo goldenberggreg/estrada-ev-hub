@@ -1,0 +1,94 @@
+---
+import Layout from "../layouts/Layout.astro";
+import VehicleCard from "../components/VehicleCard.astro";
+import JsonLd from "../components/JsonLd.astro";
+import TestDriveBookingForm from "../components/react/TestDriveBookingForm.tsx";
+import { getVehicles } from "../lib/content";
+import { site } from "../data/site";
+
+const vehicles = await getVehicles();
+const preselect = Astro.url.searchParams.get("vehicle") ?? "";
+const vehicleOpts = vehicles.map((v) => ({ model: v.model, slug: v.slug }));
+
+const steps = [
+  { n: "1", t: "Pick a car and a Saturday", d: "Choose from the current lineup and a 30-minute slot between 9am and 5pm." },
+  { n: "2", t: "Upload your license", d: "A valid driver's license and a government-issued ID. We handle the insurance." },
+  { n: "3", t: "Drive the flagship route", d: "A real São Paulo loop from Vila Madalena — traffic, hills, and parking included." },
+];
+
+const serviceSchema = {
+  "@context": "https://schema.org",
+  "@type": "Service",
+  name: "Free Saturday EV test drive",
+  serviceType: "Electric vehicle test drive",
+  provider: { "@type": "AutomotiveBusiness", name: site.name, url: site.url },
+  areaServed: "São Paulo",
+  offers: { "@type": "Offer", price: "0", priceCurrency: "BRL", availability: "https://schema.org/InStock" },
+  hoursAvailable: { "@type": "OpeningHoursSpecification", dayOfWeek: "Saturday", opens: "09:00", closes: "17:00" },
+};
+---
+
+<Layout
+  title="Book a free Saturday test drive"
+  description="Test-drive the latest EVs free every Saturday from the Vila Madalena flagship. Pick a model, choose a time, upload your license — no purchase obligation."
+>
+  <JsonLd slot="head" data={serviceSchema} />
+  <div class="charge-track"><div class="charge-fill"></div></div>
+
+  <section class="section pb-8">
+    <div class="wrap">
+      <div class="eyebrow-line mb-4"></div>
+      <h1 class="font-display font-bold text-4xl md:text-5xl max-w-3xl">Drive it before you decide</h1>
+      <p class="mt-4 text-lg text-mute max-w-2xl">
+        Free test drives every Saturday, 9am–5pm, from our flagship at {site.address.street}, {site.address.neighborhood}.
+        Pick a model, choose a time, and we'll have it charged and waiting.
+      </p>
+    </div>
+  </section>
+
+  <section class="pb-8">
+    <div class="wrap grid gap-10 lg:grid-cols-5 items-start">
+      <!-- info -->
+      <div class="lg:col-span-2 flex flex-col gap-6">
+        <div class="flex flex-col gap-5">
+          {steps.map((s) => (
+            <div class="flex gap-4 reveal">
+              <span class="flex-none inline-flex items-center justify-center w-9 h-9 rounded-full bg-primary text-white font-display font-bold">{s.n}</span>
+              <div>
+                <h3 class="font-display font-bold text-lg">{s.t}</h3>
+                <p class="text-mute text-sm mt-1">{s.d}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+        <div class="card p-5 bg-paper-warm">
+          <p class="kicker mb-2">Bring with you</p>
+          <ul class="text-sm text-mute flex flex-col gap-1.5">
+            <li class="flex gap-2"><span class="text-primary">✓</span> A valid driver's license</li>
+            <li class="flex gap-2"><span class="text-primary">✓</span> A government-issued ID</li>
+            <li class="flex gap-2"><span class="text-primary">✓</span> Comfortable shoes — you're driving</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- booking form -->
+      <div class="lg:col-span-3" id="book">
+        <TestDriveBookingForm client:idle vehicles={vehicleOpts} preselect={preselect} />
+      </div>
+    </div>
+  </section>
+
+  <!-- current lineup -->
+  <section class="section bg-paper-warm border-y border-rule">
+    <div class="wrap">
+      <div class="max-w-2xl mb-10 reveal">
+        <p class="kicker mb-2">This month's lineup</p>
+        <h2 class="font-display font-bold text-3xl md:text-4xl">Four cars, rotated monthly</h2>
+        <p class="mt-3 text-mute">A compact hatchback, a coupe, an SUV, and a city runabout — pick the one that fits your commute.</p>
+      </div>
+      <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        {vehicles.map((v, i) => <VehicleCard vehicle={v} revealDelay={(i % 4) * 80} />)}
+      </div>
+    </div>
+  </section>
+</Layout>

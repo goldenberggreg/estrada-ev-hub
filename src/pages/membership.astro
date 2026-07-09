@@ -1,0 +1,143 @@
+---
+import Layout from "../layouts/Layout.astro";
+import JsonLd from "../components/JsonLd.astro";
+import AuthForm from "../components/react/AuthForm.tsx";
+import ChargingDashboard from "../components/react/ChargingDashboard.tsx";
+import SavingsCalculator from "../components/react/SavingsCalculator.tsx";
+import { tiers, site } from "../data/site";
+import { getCurrentMember } from "../lib/wixSession";
+
+const preselect = Astro.url.searchParams.get("tier") ?? "commuter";
+const member = await getCurrentMember();
+
+const productSchema = {
+  "@context": "https://schema.org",
+  "@type": "Product",
+  name: "Estrada EV Hub Membership",
+  description: "Loyalty membership with lower per-kWh charging rates, priority peak access, co-working, and a charging-history dashboard.",
+  brand: { "@type": "Brand", name: site.name },
+  offers: tiers.map((t) => ({
+    "@type": "Offer",
+    name: t.name,
+    price: t.name === "Starter" ? "0" : t.name === "Commuter" ? "49" : "0",
+    priceCurrency: "BRL",
+    availability: "https://schema.org/InStock",
+  })),
+};
+---
+
+<Layout
+  title="Membership & loyalty program"
+  description="Join the Estrada EV Hub loyalty program: lower per-kWh rates, priority charging, free co-working, and a charging-history dashboard. Starter, Commuter, and Fleet tiers."
+>
+  <JsonLd slot="head" data={productSchema} />
+  <div class="charge-track"><div class="charge-fill"></div></div>
+
+  <!-- Hero -->
+  <section class="section pb-8">
+    <div class="wrap">
+      <div class="eyebrow-line mb-4"></div>
+      <h1 class="font-display font-bold text-4xl md:text-5xl max-w-3xl">Charge more, pay less</h1>
+      <p class="mt-4 text-lg text-mute max-w-2xl">
+        Membership pays for itself in a couple of weeks of commuting. Lower rates, priority access, the lounge, and a dashboard that tracks every kWh and every real you save.
+      </p>
+    </div>
+  </section>
+
+  <!-- Tiers -->
+  <section class="pb-4">
+    <div class="wrap grid gap-6 md:grid-cols-3 items-stretch">
+      {tiers.map((t) => (
+        <div class={`card reveal p-7 flex flex-col gap-4 ${t.featured ? "ring-2 ring-primary relative" : ""}`}>
+          {t.featured && <span class="absolute -top-3 left-7 bg-primary text-white text-xs font-semibold px-3 py-1 rounded-full">Most popular</span>}
+          <div>
+            <p class="kicker mb-1">{t.tagline}</p>
+            <h2 class="font-display font-bold text-2xl">{t.name}</h2>
+            <p class="mt-2"><span class="font-display font-bold text-4xl text-primary">{t.price}</span><span class="text-mute">{t.period}</span></p>
+          </div>
+          <ul class="flex flex-col gap-2.5 text-sm grow">
+            {t.benefits.map((b) => (
+              <li class="flex gap-2"><span class="text-primary" aria-hidden="true">✓</span><span>{b}</span></li>
+            ))}
+          </ul>
+          <a href={t.name === "Fleet" ? "/contact?topic=fleet" : "#join"} class={t.featured ? "btn-cta" : "btn-primary"}>{t.cta.label}</a>
+        </div>
+      ))}
+    </div>
+  </section>
+
+  <!-- Savings calculator (bonus) -->
+  <section class="section">
+    <div class="wrap">
+      <div class="max-w-2xl mb-8 reveal">
+        <p class="kicker mb-2">Do the math</p>
+        <h2 class="font-display font-bold text-3xl md:text-4xl">Fuel vs. electric, on your commute</h2>
+        <p class="mt-3 text-mute">Slide in your daily distance and see the monthly and yearly difference — at the member rate or pay-as-you-go.</p>
+      </div>
+      <div class="reveal">
+        <SavingsCalculator client:visible />
+      </div>
+    </div>
+  </section>
+
+  <!-- Registration / Login -->
+  <section class="section bg-paper-warm border-y border-rule" id="join">
+    <div class="wrap grid gap-10 lg:grid-cols-2 items-start">
+      <div class="reveal">
+        <p class="kicker mb-2">{member ? "You're in" : "Join the Hub"}</p>
+        <h2 class="font-display font-bold text-3xl md:text-4xl">
+          {member ? `Welcome back, ${member.firstName ?? "member"}` : "Create your account"}
+        </h2>
+        <p class="mt-3 text-mute">
+          {member
+            ? "Your membership is active — jump into your charging dashboard below."
+            : "Create a real account (email + password) or log in. Your lower rate activates at every station immediately."}
+        </p>
+        <ul class="mt-6 flex flex-col gap-3 text-sm">
+          <li class="flex gap-3"><span class="text-primary text-lg" aria-hidden="true">⚡</span> Lower per-kWh rate at all ten stations</li>
+          <li class="flex gap-3"><span class="text-primary text-lg" aria-hidden="true">☕</span> Free co-working lounge + coffee credit</li>
+          <li class="flex gap-3"><span class="text-primary text-lg" aria-hidden="true">📊</span> Charging-history dashboard &amp; monthly summaries</li>
+        </ul>
+      </div>
+      <div class="reveal">
+        {member ? (
+          <div class="card p-8 text-center">
+            <div class="text-4xl mb-3" aria-hidden="true">⚡</div>
+            <h3 class="font-display font-bold text-2xl">Signed in as {member.firstName ?? member.email}</h3>
+            <p class="text-mute mt-2">{member.email}</p>
+            <a href="#dashboard" class="btn-cta mt-6">Open your dashboard</a>
+          </div>
+        ) : (
+          <AuthForm client:idle initialMode="register" preselect={preselect} />
+        )}
+      </div>
+    </div>
+  </section>
+
+  <!-- Dashboard -->
+  <section class="section" id="dashboard">
+    <div class="wrap">
+      <div class="max-w-2xl mb-8 reveal">
+        <p class="kicker mb-2">Your dashboard</p>
+        <h2 class="font-display font-bold text-3xl md:text-4xl">Every session, every real saved</h2>
+        <p class="mt-3 text-mute">
+          {member
+            ? "Your charging history, energy use, and savings at a glance."
+            : "Log in to see your charging history, energy use, and savings."}
+        </p>
+      </div>
+      <div class="reveal">
+        {member ? (
+          <ChargingDashboard client:visible name={member.firstName ?? "there"} email={member.email} tier="Commuter" />
+        ) : (
+          <div class="card p-10 text-center">
+            <div class="text-4xl mb-3" aria-hidden="true">🔒</div>
+            <h3 class="font-display font-bold text-2xl">Members only</h3>
+            <p class="text-mute mt-2 max-w-md mx-auto">Log in or create a free account to see your charging history, monthly energy use, and savings versus fuel.</p>
+            <a href="#join" class="btn-cta mt-6">Log in or join</a>
+          </div>
+        )}
+      </div>
+    </div>
+  </section>
+</Layout>

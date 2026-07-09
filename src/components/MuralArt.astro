@@ -1,0 +1,62 @@
+---
+/**
+ * MuralArt — a deterministic geometric "neighborhood mural" rendered as inline
+ * SVG. Each station slug seeds a distinct composition, echoing the brief's
+ * commissioned-mural concept without shipping heavy photography (themed-blocks
+ * mode: fast LCP, no broken external images).
+ */
+interface Props {
+  seed?: string;
+  label?: string;
+  class?: string;
+  ratio?: string; // e.g. "4 / 3"
+}
+const { seed = "estrada", label, class: cls = "", ratio = "4 / 3" } = Astro.props;
+
+// tiny deterministic hash → pseudo-random stream
+function makeRng(s: string) {
+  let h = 2166136261;
+  for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); }
+  return () => { h += 0x6d2b79f5; let t = h; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+}
+const rng = makeRng(seed);
+const palettes = [
+  ["#00695C", "#26A69A", "#FFAB40", "#004D40", "#B2DFDB"],
+  ["#0D1B18", "#00897B", "#FFCA5C", "#2E7D32", "#E4F0EC"],
+  ["#004D40", "#43A047", "#FFAB40", "#00695C", "#F0F7F5"],
+  ["#00695C", "#FF8A65", "#FFD54F", "#1B5E20", "#B2DFDB"],
+];
+const pal = palettes[Math.floor(rng() * palettes.length)];
+const pick = () => pal[Math.floor(rng() * pal.length)];
+const W = 400, H = 300;
+
+// build a layered composition of bands, circles, triangles, and "canopy" arcs
+const bands = Array.from({ length: 5 }, (_, i) => ({ y: (H / 5) * i, h: H / 5 + rng() * 20, fill: pal[i % pal.length], skew: (rng() - 0.5) * 40 }));
+const circles = Array.from({ length: 6 }, () => ({ cx: rng() * W, cy: rng() * H, r: 12 + rng() * 46, fill: pick(), op: 0.5 + rng() * 0.5 }));
+const tris = Array.from({ length: 5 }, () => { const x = rng() * W, y = rng() * H, s = 24 + rng() * 60; return { pts: `${x},${y} ${x + s},${y} ${x + s / 2},${y - s}`, fill: pick(), op: 0.55 + rng() * 0.45 }; });
+const gid = `mg-${seed.replace(/[^a-z0-9]/gi, "")}`;
+---
+<div class={`mural ${cls}`} style={`aspect-ratio:${ratio}`} role="img" aria-label={label ?? `Mural: ${seed}`}>
+  <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <defs>
+      <linearGradient id={gid} x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color={pal[0]} />
+        <stop offset="1" stop-color={pal[3]} />
+      </linearGradient>
+    </defs>
+    <rect width={W} height={H} fill={`url(#${gid})`} />
+    {bands.map((b) => (
+      <polygon points={`0,${b.y} ${W},${b.y + b.skew} ${W},${b.y + b.h + b.skew} 0,${b.y + b.h}`} fill={b.fill} opacity="0.35" />
+    ))}
+    {circles.map((c) => (<circle cx={c.cx} cy={c.cy} r={c.r} fill={c.fill} opacity={c.op} />))}
+    {tris.map((t) => (<polygon points={t.pts} fill={t.fill} opacity={t.op} />))}
+    <g opacity="0.9">
+      <path d={`M0,${H} Q${W * 0.25},${H * 0.55} ${W * 0.5},${H * 0.72} T${W},${H * 0.6} L${W},${H} Z`} fill={pal[3]} opacity="0.5" />
+    </g>
+  </svg>
+</div>
+
+<style>
+  .mural { position: relative; width: 100%; overflow: hidden; border-radius: inherit; background: var(--color-cream); }
+  .mural svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+</style>

@@ -16,13 +16,23 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 
-# environment variables
+# environment variables (secrets — never commit)
 .env
+.env.*
 .env.production
 .env.local
 
 # macOS-specific files
 .DS_Store
+Thumbs.db
+*.swp
 
 # jetbrains setting folder
 .idea/
+
+# all log files
+*.log
+logs/
+
+# installed agent skills (vendored tooling, not part of the site)
+.agents/

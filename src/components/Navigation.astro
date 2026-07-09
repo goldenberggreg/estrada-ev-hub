@@ -1,0 +1,82 @@
+---
+import NavBookingButton from "./react/NavBookingButton.tsx";
+import LogoutButton from "./react/LogoutButton.tsx";
+import { getCurrentMember } from "../lib/wixSession";
+
+const member = await getCurrentMember();
+
+const links = [
+  { href: "/stations", label: "Stations" },
+  { href: "/test-drives", label: "Test Drives" },
+  { href: "/blog", label: "EV Journal" },
+  { href: "/membership", label: "Membership" },
+  { href: "/about", label: "About" },
+  { href: "/contact", label: "Contact" },
+];
+const path = Astro.url.pathname;
+const isActive = (href: string) => path === href || (href !== "/" && path.startsWith(href));
+---
+
+<header class="site-nav" transition:persist="site-nav">
+  <nav class="wrap flex items-center justify-between gap-6 py-3.5" aria-label="Primary">
+    <a href="/" class="flex items-center gap-2 font-display font-bold text-lg tracking-tight" aria-label="Estrada EV Hub home">
+      <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-primary text-white text-sm" aria-hidden="true">⚡</span>
+      Estrada<span class="text-primary">EV</span>
+    </a>
+
+    <input type="checkbox" id="nav-toggle" class="peer hidden" aria-hidden="true" />
+    <label
+      for="nav-toggle"
+      class="md:hidden inline-flex flex-col gap-[5px] cursor-pointer p-2 -mr-2"
+      aria-label="Toggle navigation"
+    >
+      <span class="block h-[2px] w-6 bg-ink"></span>
+      <span class="block h-[2px] w-6 bg-ink"></span>
+      <span class="block h-[2px] w-6 bg-ink"></span>
+    </label>
+
+    <div
+      class="hidden peer-checked:flex md:flex absolute md:static top-full left-0 right-0 md:right-auto z-40
+             flex-col md:flex-row gap-1 md:gap-7 items-stretch md:items-center
+             bg-paper md:bg-transparent border-b md:border-0 border-rule px-5 md:px-0 py-4 md:py-0 shadow-lg md:shadow-none"
+    >
+      <ul class="flex flex-col md:flex-row gap-1 md:gap-7 items-stretch md:items-center text-[0.95rem] font-medium">
+        {links.map((l) => (
+          <li>
+            <a
+              href={l.href}
+              class="block py-2 md:py-0 hover:text-primary transition-colors"
+              aria-current={isActive(l.href) ? "page" : undefined}
+              style={isActive(l.href) ? "color:var(--color-primary)" : undefined}
+            >
+              {l.label}
+            </a>
+          </li>
+        ))}
+      </ul>
+      <div class="flex items-center gap-3 md:gap-4 pt-2 md:pt-0">
+        {member ? (
+          <>
+            <a
+              href="/membership#dashboard"
+              class="flex items-center gap-2 group"
+              aria-label={`Account — signed in as ${member.firstName ?? member.email}`}
+              title={member.email}
+            >
+              {member.avatarUrl ? (
+                <img src={member.avatarUrl} alt="" width="36" height="36" class="w-9 h-9 rounded-full object-cover ring-2 ring-primary/30 group-hover:ring-primary transition" />
+              ) : (
+                <span class="w-9 h-9 rounded-full bg-primary text-white font-display font-bold inline-flex items-center justify-center ring-2 ring-primary/20 group-hover:ring-amber transition" aria-hidden="true">{member.initial}</span>
+              )}
+              <span class="text-[0.95rem] font-medium group-hover:text-primary transition-colors md:hidden lg:inline">{member.firstName ?? "Account"}</span>
+            </a>
+            <LogoutButton client:load />
+          </>
+        ) : (
+          <a href="/membership#join" class="text-[0.95rem] font-medium hover:text-primary transition-colors">Log in</a>
+        )}
+        <NavBookingButton client:load />
+      </div>
+    </div>
+  </nav>
+</header>

@@ -1,0 +1,260 @@
+---
+import Layout from "../layouts/Layout.astro";
+import JsonLd from "../components/JsonLd.astro";
+import MuralArt from "../components/MuralArt.astro";
+import { getStory } from "../lib/content";
+import { site } from "../data/site";
+
+const story = await getStory();
+
+const storyHeading = story?.heading ?? "Two people, one plug, a lot of coffee";
+const storyBody =
+  story?.body ??
+  "Marina and Jorge Estrada didn't set out to build a network. In 2022 they set out to fix one bad charging stop in Vila Madalena — a lot behind their apartment where a lone charger sat under a dead streetlight, and where you waited in your car because there was nowhere else to be.\n\nThey leased the lot, planted a coffee cart, and asked a muralist down the block to paint the wall. People started arriving early and leaving late. That first corner told them what São Paulo actually needed: not more chargers in more parking garages, but places worth stopping. Everything Estrada has built since is a version of that corner.";
+const storyParagraphs = storyBody.split("\n\n");
+
+const directionsHref = `https://www.google.com/maps/search/?api=1&query=${site.geo.lat},${site.geo.lng}`;
+
+const murals = [
+  { seed: "mural-ana", artist: "Ana Beatriz Corrêa", neighborhood: "Vila Madalena" },
+  { seed: "mural-rafael", artist: "Rafael Nunes", neighborhood: "Pinheiros" },
+  { seed: "mural-mag", artist: "Magda Oliveira", neighborhood: "Butantã" },
+];
+
+const team = [
+  {
+    name: "Marina Estrada",
+    role: "Co-founder & CEO",
+    bio: "Former transit planner who spent a decade untangling São Paulo's traffic before deciding the fix was where cars stop, not where they move.",
+  },
+  {
+    name: "Jorge Estrada",
+    role: "Co-founder & Head of Stations",
+    bio: "Electrical engineer who scouts every site personally and still knows the amperage of each charger by heart.",
+  },
+  {
+    name: "Camila Rocha",
+    role: "Mural Program Lead",
+    bio: "Curator who commissions a neighborhood artist for every new station and pays them like the work matters, because it does.",
+  },
+  {
+    name: "Diego Santos",
+    role: "Fleet Partnerships",
+    bio: "Brings couriers, ride-share drivers, and delivery fleets onto the network with pricing that pencils out for people who charge for a living.",
+  },
+];
+
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "AboutPage",
+  mainEntity: {
+    "@type": "AutomotiveBusiness",
+    name: site.name,
+    foundingDate: site.founded,
+    url: site.url,
+    address: {
+      "@type": "PostalAddress",
+      streetAddress: site.address.street,
+      addressLocality: site.address.city,
+      addressRegion: site.address.region,
+      postalCode: site.address.postalCode,
+      addressCountry: site.address.country,
+    },
+  },
+};
+
+const initials = (name: string) =>
+  name
+    .split(" ")
+    .map((p) => p[0])
+    .slice(0, 2)
+    .join("");
+---
+
+<Layout
+  title="About"
+  description="How Estrada EV Hub turned charging stops into places worth stopping — the Vila Madalena flagship, the mural program, and the team behind São Paulo's EV network."
+>
+  <JsonLd slot="head" data={jsonLd} />
+
+  {/* 1. Hero / intro */}
+  <section class="section bg-paper">
+    <div class="wrap">
+      <div class="grid items-center gap-10 md:grid-cols-2 md:gap-14">
+        <div class="reveal">
+          <p class="kicker">Since {site.founded}</p>
+          <h1 class="font-display text-4xl font-bold leading-tight text-ink sm:text-5xl md:text-6xl">
+            The city needed a better place to charge
+          </h1>
+          <p class="mt-6 max-w-[42rem] text-lg leading-relaxed text-ink/90">
+            Estrada EV Hub started with a single hunch: a charging stop can be
+            somewhere you actually want to be. We build fast, reliable stations
+            across São Paulo — then wrap them in good coffee, room to work, and a
+            mural from the neighborhood they sit in.
+          </p>
+        </div>
+        <div class="reveal" data-reveal-delay="100">
+          <MuralArt
+            seed="about-flagship"
+            label="The Vila Madalena flagship at golden hour"
+            ratio="4 / 3"
+            class="shadow-lg"
+          />
+        </div>
+      </div>
+    </div>
+  </section>
+
+  {/* 2. Origin story (CMS) */}
+  <section class="section bg-paper-warm border-y border-rule">
+    <div class="wrap">
+      <div class="reveal max-w-[48rem]">
+        <p class="kicker">Our story</p>
+        <h2 class="font-display text-3xl font-bold text-ink sm:text-4xl">
+          {storyHeading}
+        </h2>
+        <div class="mt-6 space-y-5">
+          {storyParagraphs.map((para) => (
+            <p class="text-lg leading-relaxed text-ink/90">{para}</p>
+          ))}
+        </div>
+      </div>
+    </div>
+  </section>
+
+  {/* 3. The mural program */}
+  <section class="section bg-paper">
+    <div class="wrap">
+      <div class="reveal max-w-[48rem]">
+        <p class="kicker">The mural program</p>
+        <h2 class="font-display text-3xl font-bold text-ink sm:text-4xl">
+          Every station carries a wall worth looking at
+        </h2>
+        <p class="mt-6 text-lg leading-relaxed text-ink/90">
+          Before a station opens, we commission a mural from an artist who lives
+          nearby. They set the palette, they sign the wall, and they're paid for
+          the work. It's how a charging stop stops feeling like infrastructure
+          and starts feeling like the block it's on.
+        </p>
+      </div>
+
+      <ul class="reveal mt-10 grid list-none gap-4 sm:grid-cols-3" data-reveal-delay="100">
+        {murals.map((m) => (
+          <li>
+            <MuralArt
+              seed={m.seed}
+              label={`Station mural by ${m.artist} in ${m.neighborhood}`}
+              ratio="1 / 1"
+              class="rounded-xl"
+            />
+            <p class="mt-3 font-display text-sm font-bold text-ink">{m.artist}</p>
+            <p class="text-sm text-mute">{m.neighborhood}</p>
+          </li>
+        ))}
+      </ul>
+    </div>
+  </section>
+
+  {/* 4. The flagship */}
+  <section class="section bg-paper-warm border-y border-rule">
+    <div class="wrap">
+      <div class="card reveal">
+        <div class="grid gap-8 md:grid-cols-2 md:items-center">
+          <div>
+            <p class="kicker">The flagship</p>
+            <h2 class="font-display text-3xl font-bold text-ink sm:text-4xl">
+              Vila Madalena, where it all runs from
+            </h2>
+            <p class="mt-6 text-lg leading-relaxed text-ink/90">
+              Our flagship is the fullest version of the idea: eight CCS2
+              chargers, an espresso bar pulling local beans, co-working desks for
+              the wait, and a kids corner so a charge stop works for the whole
+              car.
+            </p>
+            <address class="mt-6 not-italic text-ink/90">
+              <span class="block font-display font-bold text-ink">
+                {site.address.street}
+              </span>
+              <span class="block">
+                {site.address.neighborhood}, {site.address.city} –{" "}
+                {site.address.region}
+              </span>
+              <span class="block">{site.address.postalCode}</span>
+            </address>
+            <p class="mt-4 text-sm text-mute">{site.hours}</p>
+            <div class="mt-6">
+              <a
+                class="btn-secondary"
+                href={directionsHref}
+                target="_blank"
+                rel="noopener"
+              >
+                Get directions
+              </a>
+            </div>
+          </div>
+          <MuralArt
+            seed="about-flagship-detail"
+            label="Inside the Vila Madalena flagship — espresso bar and co-working desks"
+            ratio="4 / 3"
+            class="rounded-xl"
+          />
+        </div>
+      </div>
+    </div>
+  </section>
+
+  {/* 5. Team */}
+  <section class="section bg-paper">
+    <div class="wrap">
+      <div class="reveal max-w-[48rem]">
+        <p class="kicker">The team</p>
+        <h2 class="font-display text-3xl font-bold text-ink sm:text-4xl">
+          The people behind the network
+        </h2>
+        <p class="mt-6 text-lg leading-relaxed text-ink/90">
+          A small crew that scouts sites, keeps the chargers honest, and treats
+          every wall as a commission.
+        </p>
+      </div>
+
+      <ul class="reveal mt-10 grid list-none gap-6 sm:grid-cols-2 lg:grid-cols-4" data-reveal-delay="100">
+        {team.map((person) => (
+          <li class="card">
+            <span
+              class="inline-flex h-14 w-14 items-center justify-center rounded-full bg-primary font-display text-lg font-bold text-white"
+              aria-hidden="true"
+            >
+              {initials(person.name)}
+            </span>
+            <h3 class="mt-4 font-display text-lg font-bold text-ink">
+              {person.name}
+            </h3>
+            <p class="text-sm font-medium text-primary-deep">{person.role}</p>
+            <p class="mt-3 text-sm leading-relaxed text-ink/80">{person.bio}</p>
+          </li>
+        ))}
+      </ul>
+    </div>
+  </section>
+
+  {/* 6. Closing CTA band */}
+  <section class="section bg-ink text-on-dark">
+    <div class="wrap">
+      <div class="reveal max-w-[46rem]">
+        <p class="kicker">Ready when you are</p>
+        <h2 class="font-display text-3xl font-bold sm:text-4xl">
+          Find your nearest station
+        </h2>
+        <p class="mt-6 text-lg leading-relaxed text-on-dark/70">
+          Charge across São Paulo, or come see the flagship for yourself. Every
+          Saturday we hand the keys to anyone curious about going electric.
+        </p>
+        <div class="mt-8 flex flex-col gap-4 sm:flex-row">
+          <a class="btn-cta" href="/stations">Find a station</a>
+          <a class="btn-outline-light" href="/test-drives">Book a test drive</a>
+        </div>
+      </div>
+    </div>
+  </section>
+</Layout>

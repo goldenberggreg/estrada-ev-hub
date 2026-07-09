@@ -1,0 +1,26 @@
+---
+import Layout from "../layouts/Layout.astro";
+const sections = [
+  { h: "Using our stations", b: "Chargers are available to any driver, pay-per-session or via membership. Follow posted safety instructions and station hours. Emergency call buttons are on every charger." },
+  { h: "Test drives", b: "Test drives are free and require a valid driver's license and government-issued ID. We provide insurance for the scheduled 30-minute route. Drivers must be legally licensed and follow all traffic laws." },
+  { h: "Membership", b: "Membership tiers, rates, and benefits may change with notice. You can cancel anytime from your dashboard; charging-session charges already incurred remain payable." },
+  { h: "Liability", b: "Estrada EV Hub is not liable for indirect damages arising from station use beyond the limits permitted by Brazilian consumer law." },
+];
+---
+<Layout title="Terms & Conditions" description="The terms for using Estrada EV Hub stations, test drives, and membership." noindex={true}>
+  <section class="section">
+    <div class="wrap max-w-[48rem]">
+      <div class="eyebrow-line mb-4"></div>
+      <h1 class="font-display font-bold text-4xl">Terms &amp; Conditions</h1>
+      <p class="mt-3 text-mute">Last updated 2025. This is a summary for the demo build.</p>
+      <div class="mt-8 flex flex-col gap-8">
+        {sections.map((s) => (
+          <div>
+            <h2 class="font-display font-bold text-xl mb-2">{s.h}</h2>
+            <p class="text-mute leading-relaxed">{s.b}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+</Layout>

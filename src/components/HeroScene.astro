@@ -1,0 +1,99 @@
+---
+/**
+ * HeroScene — the LCP visual: a golden-hour Vila Madalena station rendered as
+ * inline SVG (mural wall, a compact EV plugged into a branded charger, string
+ * lights). Inline = zero image request, instant paint. A dark teal-black
+ * gradient overlays the bottom for text legibility (deepens on mobile).
+ */
+interface Props { class?: string; }
+const { class: cls = "" } = Astro.props;
+---
+<div class={`hero-scene ${cls}`} aria-hidden="true">
+  <svg viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#FFCA5C" />
+        <stop offset="0.35" stop-color="#FFAB40" />
+        <stop offset="0.7" stop-color="#5E8B7E" />
+        <stop offset="1" stop-color="#0D1B18" />
+      </linearGradient>
+      <linearGradient id="wall" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#00695C" />
+        <stop offset="1" stop-color="#004D40" />
+      </linearGradient>
+      <radialGradient id="sun" cx="0.8" cy="0.2" r="0.5">
+        <stop offset="0" stop-color="#FFF3D6" stop-opacity="0.9" />
+        <stop offset="1" stop-color="#FFF3D6" stop-opacity="0" />
+      </radialGradient>
+    </defs>
+
+    <!-- sky + sun -->
+    <rect width="1440" height="900" fill="url(#sky)" />
+    <rect width="1440" height="900" fill="url(#sun)" />
+
+    <!-- mural wall -->
+    <rect x="0" y="120" width="1440" height="520" fill="url(#wall)" />
+    <g opacity="0.92">
+      <circle cx="230" cy="300" r="120" fill="#26A69A" opacity="0.55" />
+      <circle cx="360" cy="380" r="70" fill="#FFAB40" opacity="0.7" />
+      <path d="M540 640 Q680 300 840 640 Z" fill="#43A047" opacity="0.6" />
+      <path d="M760 640 Q900 260 1040 640 Z" fill="#2E7D32" opacity="0.65" />
+      <polygon points="1080,640 1180,360 1280,640" fill="#FFCA5C" opacity="0.7" />
+      <circle cx="1180" cy="300" r="90" fill="#B2DFDB" opacity="0.5" />
+      <path d="M120 640 Q120 400 300 460 T520 640 Z" fill="#00897B" opacity="0.5" />
+    </g>
+
+    <!-- string lights -->
+    <path d="M0 150 Q360 210 720 160 T1440 170" fill="none" stroke="#0D1B18" stroke-width="2" opacity="0.4" />
+    <g fill="#FFF3D6">
+      {Array.from({ length: 16 }).map((_, i) => {
+        const x = 40 + i * 90;
+        const y = 175 + Math.sin(i * 0.7) * 22;
+        return <circle cx={x} cy={y} r="5" opacity="0.9" />;
+      })}
+    </g>
+
+    <!-- ground -->
+    <rect x="0" y="640" width="1440" height="260" fill="#12211C" />
+    <rect x="0" y="640" width="1440" height="8" fill="#0D1B18" opacity="0.6" />
+
+    <!-- charger pedestal -->
+    <rect x="300" y="470" width="52" height="180" rx="10" fill="#0D1B18" />
+    <rect x="310" y="490" width="32" height="46" rx="6" fill="#26A69A" />
+    <circle cx="326" cy="513" r="7" fill="#FFAB40" />
+
+    <!-- compact EV silhouette -->
+    <g>
+      <path d="M380 640 L420 560 Q440 540 480 536 L640 532 Q690 532 720 566 L760 612 L820 620 Q840 624 840 640 Z" fill="#0F2A24" />
+      <path d="M448 560 Q460 548 484 546 L604 544 Q636 546 656 566 L672 604 L448 606 Z" fill="#1E4B41" opacity="0.8" />
+      <circle cx="470" cy="640" r="42" fill="#0D1B18" />
+      <circle cx="470" cy="640" r="18" fill="#26A69A" />
+      <circle cx="720" cy="640" r="42" fill="#0D1B18" />
+      <circle cx="720" cy="640" r="18" fill="#26A69A" />
+      <!-- charge cable from pedestal to car -->
+      <path d="M342 520 Q370 560 400 590" fill="none" stroke="#FFAB40" stroke-width="6" stroke-linecap="round" />
+    </g>
+
+    <!-- customer w/ coffee -->
+    <g transform="translate(980 470)">
+      <circle cx="0" cy="0" r="26" fill="#3D2B22" />
+      <rect x="-24" y="26" width="48" height="150" rx="22" fill="#B85C38" />
+      <rect x="26" y="70" width="16" height="16" rx="3" fill="#FFF3D6" />
+    </g>
+  </svg>
+  <div class="hero-overlay"></div>
+</div>
+
+<style>
+  .hero-scene { position: absolute; inset: 0; overflow: hidden; background: #0D1B18; }
+  .hero-scene svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  .hero-overlay {
+    position: absolute; inset: 0;
+    background: linear-gradient(180deg, transparent 8%, rgba(13,27,24,0.45) 48%, rgba(13,27,24,0.88) 100%);
+  }
+  @media (max-width: 767px) {
+    .hero-overlay {
+      background: linear-gradient(180deg, rgba(13,27,24,0.3) 0%, rgba(13,27,24,0.6) 40%, rgba(13,27,24,0.94) 100%);
+    }
+  }
+</style>

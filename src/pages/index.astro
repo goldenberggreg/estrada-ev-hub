@@ -1,8 +1,256 @@
 ---
-import Welcome from '../components/Welcome.astro';
-import Layout from '../layouts/Layout.astro';
+import Layout from "../layouts/Layout.astro";
+import HeroScene from "../components/HeroScene.astro";
+import StationCard from "../components/StationCard.astro";
+import VehicleCard from "../components/VehicleCard.astro";
+import Faq from "../components/Faq.astro";
+import JsonLd from "../components/JsonLd.astro";
+import MuralArt from "../components/MuralArt.astro";
+import { getStations, getTestimonials, getVehicles } from "../lib/content";
+import { faqs } from "../data/faq";
+import { tiers, site } from "../data/site";
+import { posts, fmtDate } from "../data/journal";
+
+const [stations, testimonials, vehicles] = await Promise.all([
+  getStations(),
+  getTestimonials(),
+  getVehicles(),
+]);
+const featuredStations = stations.slice(0, 3);
+const featuredVehicles = vehicles.slice(0, 3);
+const journalPreviews = posts.slice(0, 2);
+
+const howItWorks = [
+  { icon: "📍", title: "Find a station", body: "Ten locations across São Paulo, each with live charger availability on the map." },
+  { icon: "🔌", title: "Plug in & grab a coffee", body: "CCS2 fast charging while you work in the lounge or order from the local roaster." },
+  { icon: "🔔", title: "Get notified", body: "We ping you the moment your car hits 80% — no watching a meter." },
+];
+
+const automotiveBusiness = {
+  "@context": "https://schema.org",
+  "@type": "AutomotiveBusiness",
+  name: site.name,
+  description:
+    "EV charging station network and consultation center in São Paulo pairing fast charging with co-working lounges, coffee bars, and neighborhood murals.",
+  url: site.url,
+  telephone: site.phone,
+  email: site.email,
+  priceRange: site.priceRange,
+  foundingDate: site.founded,
+  address: {
+    "@type": "PostalAddress",
+    streetAddress: site.address.street,
+    addressLocality: site.address.city,
+    addressRegion: site.address.region,
+    postalCode: site.address.postalCode,
+    addressCountry: site.address.country,
+  },
+  geo: { "@type": "GeoCoordinates", latitude: site.geo.lat, longitude: site.geo.lng },
+  areaServed: "São Paulo",
+  sameAs: [
+    `https://instagram.com/${site.socials.instagram}`,
+    `https://x.com/${site.socials.twitter}`,
+  ],
+};
+const faqSchema = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
 ---
 
-<Layout>
-	<Welcome />
+<Layout
+  title="EV charging São Paulo, with coffee and co-working"
+  description="Fast EV charging with co-working lounges, local coffee, and neighborhood murals across São Paulo. Free Saturday test drives from our Vila Madalena flagship."
+>
+  <JsonLd slot="head" data={[automotiveBusiness, faqSchema]} />
+
+  <!-- charge bar: page-scroll signature device -->
+  <div class="charge-track"><div class="charge-fill"></div></div>
+
+  <!-- 1 · HERO -->
+  <section class="relative min-h-[86vh] md:min-h-[92vh] flex items-end overflow-hidden">
+    <HeroScene />
+    <div class="wrap relative z-10 pb-16 md:pb-24 pt-28">
+      <div class="max-w-2xl hero-copy">
+        <p class="kicker hero-anim hero-kicker !text-amber mb-4">Vila Madalena · São Paulo</p>
+        <h1 class="hero-anim hero-title font-display font-bold text-on-dark text-[2rem] leading-[1.05] md:text-[3.5rem]">
+          Charge your car while you grab a coffee
+        </h1>
+        <p class="hero-anim hero-sub mt-5 text-lg text-on-dark/85 max-w-xl">
+          Fast charging, co-working lounges, and a local roaster at every station across the city.
+        </p>
+        <div class="hero-anim hero-cta mt-8 flex flex-col sm:flex-row gap-3">
+          <a href="/test-drives" class="btn-cta">Book a test drive</a>
+          <a href="/stations" class="btn-outline-light">Find a station</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2 · HOW IT WORKS -->
+  <section class="section">
+    <div class="wrap">
+      <div class="max-w-2xl mb-12 reveal">
+        <div class="eyebrow-line mb-4"></div>
+        <h2 class="font-display font-bold text-3xl md:text-4xl">Thirty minutes, well spent</h2>
+        <p class="mt-3 text-mute text-lg">Charging should be the best part of your errand, not dead time.</p>
+      </div>
+      <div class="grid gap-6 md:grid-cols-3">
+        {howItWorks.map((s, i) => (
+          <div class="card reveal p-7 flex flex-col gap-3" data-reveal-delay={i * 100}>
+            <span class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-primary text-white text-xl" aria-hidden="true">{s.icon}</span>
+            <h3 class="font-display font-bold text-xl mt-1">{s.title}</h3>
+            <p class="text-mute">{s.body}</p>
+            <div class="card-charge mt-2"><i></i></div>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- 3 · STATION HIGHLIGHTS -->
+  <section class="section bg-paper-warm border-y border-rule">
+    <div class="wrap">
+      <div class="flex flex-wrap items-end justify-between gap-4 mb-10">
+        <div class="max-w-xl reveal">
+          <p class="kicker mb-2">Ten stations, ten murals</p>
+          <h2 class="font-display font-bold text-3xl md:text-4xl">Somewhere you'd actually stop</h2>
+        </div>
+        <a href="/stations" class="btn-ghost">View all stations →</a>
+      </div>
+      <div class="grid gap-6 md:grid-cols-3">
+        {featuredStations.map((s, i) => <StationCard station={s} revealDelay={i * 100} />)}
+      </div>
+    </div>
+  </section>
+
+  <!-- 4 · TEST DRIVE SATURDAYS -->
+  <section class="section">
+    <div class="wrap grid gap-10 lg:grid-cols-5 items-center">
+      <div class="lg:col-span-2 reveal">
+        <div class="relative rounded-lg overflow-hidden">
+          <MuralArt seed="test-drive-saturday" label="A driver pulling out of the Vila Madalena flagship" ratio="4 / 5" />
+          <div class="absolute inset-0 flex items-end p-6" style="background:linear-gradient(180deg,transparent 40%,rgba(13,27,24,0.7))">
+            <p class="text-on-dark font-display font-bold text-2xl leading-tight">Free every<br/>Saturday, 9–5</p>
+          </div>
+        </div>
+      </div>
+      <div class="lg:col-span-3">
+        <p class="kicker mb-2 reveal">Test drive Saturdays</p>
+        <h2 class="font-display font-bold text-3xl md:text-4xl reveal">Drive it before you decide</h2>
+        <p class="mt-3 text-mute text-lg reveal">Bring a license and an ID. We handle insurance for a 30-minute route from the flagship. No pitch at the end.</p>
+        <div class="mt-8 grid gap-4 sm:grid-cols-3">
+          {featuredVehicles.map((v, i) => (
+            <a href={`/test-drives?vehicle=${v.slug}`} class="card reveal p-4 hover:border-primary transition-colors" data-reveal-delay={i * 80}>
+              <p class="kicker text-xs mb-1">{v.type}</p>
+              <p class="font-display font-bold text-lg leading-tight">{v.model}</p>
+              <p class="text-sm text-mute mt-1">{v.rangeKm} km · {v.seats} seats</p>
+            </a>
+          ))}
+        </div>
+        <a href="/test-drives" class="btn-cta mt-8">Book a test drive</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5 · MEMBERSHIP TIERS -->
+  <section class="section bg-paper-warm border-y border-rule">
+    <div class="wrap">
+      <div class="max-w-2xl mb-10 reveal">
+        <p class="kicker mb-2">Membership</p>
+        <h2 class="font-display font-bold text-3xl md:text-4xl">Charge more, pay less</h2>
+        <p class="mt-3 text-mute text-lg">Start free and pay per session, or unlock lower rates and the lounge.</p>
+      </div>
+      <div class="grid gap-6 md:grid-cols-3 items-stretch">
+        {tiers.map((t, i) => (
+          <div class={`card reveal p-7 flex flex-col gap-4 ${t.featured ? "ring-2 ring-primary relative" : ""}`} data-reveal-delay={i * 100}>
+            {t.featured && <span class="absolute -top-3 left-7 bg-primary text-white text-xs font-semibold px-3 py-1 rounded-full">Most popular</span>}
+            <div>
+              <p class="kicker mb-1">{t.tagline}</p>
+              <h3 class="font-display font-bold text-2xl">{t.name}</h3>
+              <p class="mt-2"><span class="font-display font-bold text-3xl text-primary">{t.price}</span><span class="text-mute">{t.period}</span></p>
+            </div>
+            <ul class="flex flex-col gap-2.5 text-sm grow">
+              {t.benefits.map((b) => (
+                <li class="flex gap-2"><span class="text-primary" aria-hidden="true">✓</span><span>{b}</span></li>
+              ))}
+            </ul>
+            <a href={t.cta.href} class={t.featured ? "btn-cta" : "btn-primary"}>{t.cta.label}</a>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- 6 · FROM THE EV JOURNAL -->
+  <section class="section">
+    <div class="wrap">
+      <div class="flex flex-wrap items-end justify-between gap-4 mb-10">
+        <div class="reveal">
+          <p class="kicker mb-2">From the EV Journal</p>
+          <h2 class="font-display font-bold text-3xl md:text-4xl">Range, rates & real stories</h2>
+        </div>
+        <a href="/blog" class="btn-ghost">Read the journal →</a>
+      </div>
+      <div class="grid gap-6 md:grid-cols-2">
+        {journalPreviews.map((p, i) => (
+          <a href={`/blog/${p.slug}`} class="card reveal overflow-hidden group" data-reveal-delay={i * 100}>
+            <div class="relative">
+              <MuralArt seed={p.slug} label={p.title} ratio="16 / 9" />
+              <span class="absolute top-3 left-3 bg-paper text-primary-deep text-xs font-semibold px-2.5 py-1 rounded-full">{p.category}</span>
+            </div>
+            <div class="p-6">
+              <p class="text-xs text-mute">{fmtDate(p.date)} · {p.readMins} min read</p>
+              <h3 class="font-display font-bold text-xl mt-1 leading-tight group-hover:text-primary transition-colors">{p.title}</h3>
+              <p class="text-mute text-sm mt-2 line-clamp-2">{p.excerpt}</p>
+            </div>
+          </a>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- 7 · TESTIMONIALS -->
+  <section class="section bg-ink text-on-dark">
+    <div class="wrap">
+      <div class="max-w-2xl mb-10 reveal">
+        <p class="kicker mb-2 !text-amber">Driver stories</p>
+        <h2 class="font-display font-bold text-3xl md:text-4xl text-on-dark">Members, in their words</h2>
+      </div>
+      <div class="grid gap-6 md:grid-cols-3">
+        {testimonials.map((t, i) => (
+          <figure class="reveal rounded-2xl p-6 flex flex-col gap-4" style="background:color-mix(in srgb, var(--color-on-dark) 6%, transparent)" data-reveal-delay={i * 100}>
+            <div class="text-amber" aria-label={`${t.rating} out of 5`}>{"★".repeat(t.rating)}</div>
+            <blockquote class="text-on-dark/90 leading-relaxed">"{t.quote}"</blockquote>
+            <figcaption class="flex items-center gap-3 mt-auto pt-2">
+              <span class="inline-flex items-center justify-center w-10 h-10 rounded-full bg-amber text-ink font-display font-bold" aria-hidden="true">{t.name.charAt(0)}</span>
+              <span>
+                <span class="block font-semibold text-on-dark">{t.name}</span>
+                <span class="block text-xs text-on-dark/60">{t.membershipTier} · {t.detail}</span>
+              </span>
+            </figcaption>
+          </figure>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- 8 · FAQ -->
+  <section class="section">
+    <div class="wrap grid gap-10 lg:grid-cols-3">
+      <div class="reveal">
+        <p class="kicker mb-2">Good to know</p>
+        <h2 class="font-display font-bold text-3xl md:text-4xl">Questions, answered</h2>
+        <p class="mt-3 text-mute">Still curious? <a href="/contact" class="text-primary underline">Send us a message.</a></p>
+      </div>
+      <div class="lg:col-span-2 reveal">
+        <Faq items={faqs} />
+      </div>
+    </div>
+  </section>
 </Layout>

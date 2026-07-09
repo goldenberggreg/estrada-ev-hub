@@ -1,0 +1,122 @@
+---
+import Layout from "../layouts/Layout.astro";
+import StationCard from "../components/StationCard.astro";
+import JsonLd from "../components/JsonLd.astro";
+import StationMapEmbed from "../components/react/StationMapEmbed.tsx";
+import { getStations, splitList } from "../lib/content";
+import { site } from "../data/site";
+
+const stations = await getStations();
+
+const chargerFilter = Astro.url.searchParams.get("charger");
+const onlyAvailable = Astro.url.searchParams.get("available") === "1";
+const chargerTypes = ["CCS2", "Type 2", "CHAdeMO"];
+
+let filtered = stations;
+if (chargerFilter) filtered = filtered.filter((s) => splitList(s.chargerTypes).includes(chargerFilter));
+if (onlyAvailable) filtered = filtered.filter((s) => (s.availableNow ?? 0) > 0);
+
+const totalChargers = stations.reduce((n, s) => n + (s.chargerCount ?? 0), 0);
+const totalAvailable = stations.reduce((n, s) => n + (s.availableNow ?? 0), 0);
+
+const mapStations = stations.map((s) => ({
+  id: s._id, name: s.name, neighborhood: s.neighborhood, slug: s.slug,
+  lat: s.lat, lng: s.lng, availableNow: s.availableNow, chargerCount: s.chargerCount,
+}));
+
+const itemList = {
+  "@context": "https://schema.org",
+  "@type": "ItemList",
+  name: "Estrada EV Hub charging stations",
+  numberOfItems: stations.length,
+  itemListElement: stations.map((s, i) => ({
+    "@type": "ListItem",
+    position: i + 1,
+    item: {
+      "@type": "AutomotiveBusiness",
+      name: s.name,
+      address: { "@type": "PostalAddress", streetAddress: s.address, addressLocality: "São Paulo", addressRegion: "SP", addressCountry: "BR" },
+      geo: { "@type": "GeoCoordinates", latitude: s.lat, longitude: s.lng },
+    },
+  })),
+};
+
+const chip = (active: boolean) =>
+  `px-4 py-2 rounded-full text-sm font-medium border transition-colors ${
+    active ? "bg-primary text-white border-primary" : "bg-paper-warm border-rule hover:border-primary"
+  }`;
+const qs = (params: Record<string, string | null>) => {
+  const u = new URLSearchParams();
+  if (params.charger) u.set("charger", params.charger);
+  if (params.available) u.set("available", params.available);
+  const s = u.toString();
+  return s ? `?${s}` : "/stations";
+};
+---
+
+<Layout
+  title="Charging stations across São Paulo"
+  description="Find an Estrada EV Hub charging station near you: live availability, charger types, amenities, and neighborhood murals across ten São Paulo locations."
+>
+  <JsonLd slot="head" data={itemList} />
+  <div class="charge-track"><div class="charge-fill"></div></div>
+
+  <!-- Header -->
+  <section class="section pb-8">
+    <div class="wrap">
+      <div class="eyebrow-line mb-4"></div>
+      <h1 class="font-display font-bold text-4xl md:text-5xl max-w-3xl">Ten stations. Real-time availability.</h1>
+      <p class="mt-4 text-lg text-mute max-w-2xl">
+        Every location shows how many chargers are free right now. Filter by connector, then get directions in a tap.
+      </p>
+      <div class="mt-6 flex flex-wrap gap-6 text-sm">
+        <span class="flex items-center gap-2"><span class="inline-block w-3 h-3 rounded-full bg-[#22C55E]"></span><strong>{totalAvailable}</strong> chargers free now</span>
+        <span class="text-mute">of {totalChargers} across {stations.length} stations</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Map facade -->
+  <section class="pb-10">
+    <div class="wrap">
+      <StationMapEmbed client:visible stations={mapStations} />
+    </div>
+  </section>
+
+  <!-- Filters -->
+  <section class="pb-4">
+    <div class="wrap flex flex-wrap items-center gap-2">
+      <span class="text-sm text-mute mr-1">Connector:</span>
+      <a href={qs({ available: onlyAvailable ? "1" : null })} class={chip(!chargerFilter)}>All</a>
+      {chargerTypes.map((c) => (
+        <a href={qs({ charger: c, available: onlyAvailable ? "1" : null })} class={chip(chargerFilter === c)}>{c}</a>
+      ))}
+      <span class="w-px h-6 bg-rule mx-2 hidden sm:block"></span>
+      <a href={qs({ charger: chargerFilter, available: onlyAvailable ? null : "1" })} class={chip(onlyAvailable)}>
+        Available now
+      </a>
+    </div>
+  </section>
+
+  <!-- Grid -->
+  <section class="section pt-6">
+    <div class="wrap">
+      {filtered.length === 0 ? (
+        <p class="text-mute">No stations match that filter. <a href="/stations" class="text-primary underline">Clear filters</a>.</p>
+      ) : (
+        <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {filtered.map((s, i) => <StationCard station={s} revealDelay={(i % 3) * 100} />)}
+        </div>
+      )}
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="section bg-ink text-on-dark">
+    <div class="wrap text-center max-w-2xl mx-auto">
+      <h2 class="font-display font-bold text-3xl md:text-4xl text-on-dark">Not sure which EV fits your commute?</h2>
+      <p class="mt-3 text-on-dark/80">Book a free Saturday test drive from the Vila Madalena flagship — {site.address.street}.</p>
+      <a href="/test-drives" class="btn-cta mt-6">Book a test drive</a>
+    </div>
+  </section>
+</Layout>
